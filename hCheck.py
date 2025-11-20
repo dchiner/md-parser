@@ -1,6 +1,7 @@
 import re
 import json
 import pathlib
+import requests
 import PIL.Image
 import lib.hugo_utils
 import lib.hugo_uris
@@ -210,19 +211,20 @@ if __name__ == '__main__':
         base_dir=lib.hugo_uris.BASE_DIR
     )
     print('=' * 103)
-    error_keys = [each_item[LABEL_ERROR_TYPE] for each_item in my_log_list]
-    [print(f'{each_error_key}: {error_keys.count(each_error_key)}') for each_error_key in set(error_keys)]
-    output_json_file_path = pathlib.Path().home() / 'Downloads/log.json'
-    print(f'Saving file://{output_json_file_path.as_posix()}')
-    json.dump(
-        obj=sorted(my_log_list, key=lambda x: x[LABEL_ERROR_TYPE]),
-        fp=output_json_file_path.open(mode='w')
-    )
-    if args.open:
-        lib.hugo_utils.open_in_browser(file_path=output_json_file_path)
+    if my_log_list:
+        error_keys = [each_item[LABEL_ERROR_TYPE] for each_item in my_log_list]
+        [print(f'{each_error_key}: {error_keys.count(each_error_key)}') for each_error_key in set(error_keys)]
+        output_json_file_path = pathlib.Path().home() / 'Downloads/log.json'
+        print(f'Saving file://{output_json_file_path.as_posix()}')
+        json.dump(
+            obj=sorted(my_log_list, key=lambda x: x[LABEL_ERROR_TYPE]),
+            fp=output_json_file_path.open(mode='w')
+        )
+        if args.open:
+            lib.hugo_utils.open_in_browser(file_path=output_json_file_path)
+    else:
+        print('No errors detected')
     if args.external:
-        import requests
-
         print('=' * 103)
         print('Checking external URLs:\n')
         for each_url in my_external_links_set:
@@ -237,6 +239,6 @@ if __name__ == '__main__':
     if args.delete:
         for each_item in my_log_list:
             if each_item[LABEL_ERROR_TYPE] == ERROR_UNUSED_PNG_FILE:
-                each_png_file = pathlib.Path(each_item['Detected on file'])
+                each_png_file = pathlib.Path(each_item[LABEL_DETECTED_ON_FILE])
                 print('Removing', each_png_file)
                 each_png_file.unlink()

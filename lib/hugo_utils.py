@@ -19,6 +19,7 @@ def path2url(file_path, base_url, base_dir):
 
 
 def url2path(file_url, base_dir):
+    file_url = file_url.split('/#')[0]
     file_path = base_dir.joinpath('/'.join(file_url.split('/')[3:]))
     if file_path.with_suffix(suffix='.md').exists():
         return file_path.with_suffix(suffix='.md')
