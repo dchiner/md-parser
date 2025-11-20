@@ -22,7 +22,6 @@ LABEL_ERRORS = 'ERRORS'
 LABEL_EXTERNAL_LINKS = 'External links'
 
 
-
 def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
     for each_md_file_path in all_pages_dict:
         print('Parsing', each_md_file_path)
@@ -31,7 +30,11 @@ def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
                 {
                     LABEL_ERROR_TYPE: 'Empty file',
                     LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
-                    LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(file_path=each_md_file_path)
+                    LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
+                        file_path=each_md_file_path,
+                        base_url=lib.hugo_uris.BASE_URL_LOCAL,
+                        base_dir=lib.hugo_uris.BASE_DIR
+                    )
                 }
             )
         for each_tuple in re.findall(pattern=r"\[(.*?)\]\((.*?)\)", string=all_pages_dict[each_md_file_path]):
@@ -40,7 +43,11 @@ def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
                     {
                         LABEL_ERROR_TYPE: 'HTTP link',
                         LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
-                        LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(file_path=each_md_file_path),
+                        LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
+                            file_path=each_md_file_path,
+                            base_url=lib.hugo_uris.BASE_URL_LOCAL,
+                            base_dir=lib.hugo_uris.BASE_DIR
+                        ),
                         LABEL_DETECTED_ON_ANCHOR: str(each_tuple)
                     }
                 )
@@ -50,7 +57,11 @@ def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
                     {
                         LABEL_ERROR_TYPE: 'Non-matching raw HTTPS URL',
                         LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
-                        LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(file_path=each_md_file_path),
+                        LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
+                            file_path=each_md_file_path,
+                            base_url=lib.hugo_uris.BASE_URL_LOCAL,
+                            base_dir=lib.hugo_uris.BASE_DIR
+                        ),
                         LABEL_DETECTED_ON_ANCHOR: each_tuple
                     }
                 )
@@ -65,7 +76,11 @@ def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
                     {
                         LABEL_ERROR_TYPE: 'Link not starting with slash ("/")',
                         LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
-                        LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(file_path=each_md_file_path),
+                        LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
+                            file_path=each_md_file_path,
+                            base_url=lib.hugo_uris.BASE_URL_LOCAL,
+                            base_dir=lib.hugo_uris.BASE_DIR
+                        ),
                         LABEL_DETECTED_ON_ANCHOR: each_tuple
                     }
                 )
@@ -79,7 +94,11 @@ def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
                     {
                         LABEL_ERROR_TYPE: 'Broken link',
                         LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
-                        LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(file_path=each_md_file_path),
+                        LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
+                            file_path=each_md_file_path,
+                            base_url=lib.hugo_uris.BASE_URL_LOCAL,
+                            base_dir=lib.hugo_uris.BASE_DIR
+                        ),
                         LABEL_DETECTED_ON_ANCHOR: each_tuple
                     }
                 )
@@ -108,7 +127,11 @@ def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
                         {
                             LABEL_ERROR_TYPE: 'Broken external anchor',
                             LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
-                            LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(file_path=each_md_file_path),
+                            LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
+                                file_path=each_md_file_path,
+                                base_url=lib.hugo_uris.BASE_URL_LOCAL,
+                                base_dir=lib.hugo_uris.BASE_DIR
+                            ),
                             LABEL_DETECTED_ON_ANCHOR: each_tuple
                         }
                     )
@@ -118,7 +141,11 @@ def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
                     {
                         LABEL_ERROR_TYPE: 'No matching title',
                         LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
-                        LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(file_path=each_md_file_path),
+                        LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
+                            file_path=each_md_file_path,
+                            base_url=lib.hugo_uris.BASE_URL_LOCAL,
+                            base_dir=lib.hugo_uris.BASE_DIR
+                        ),
                         LABEL_DETECTED_ON_ANCHOR: each_tuple
                     }
                 )

@@ -47,7 +47,7 @@ def get_page_title(file_contents):
     return file_contents.split('title: "').pop().split('"')[0].strip()
 
 
-def get_page_weight(file_contents, no_weigh_found):
+def get_page_weight(file_contents, no_weigh_found=NO_WEIGHT_FOUND.verbose):
     if 'weight:' not in file_contents:
         if no_weigh_found == NO_WEIGHT_FOUND.silent:
             return -1

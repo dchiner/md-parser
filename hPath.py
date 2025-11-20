@@ -1,6 +1,5 @@
 import pathlib
 import argparse
-
 import lib.hugo_uris
 import lib.hugo_utils
 

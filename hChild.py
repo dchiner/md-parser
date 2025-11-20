@@ -6,7 +6,6 @@ PAGE_WEIGHT = 'PAGE_WEIGHT'
 PAGE_TITLE = 'PAGE_TITLE'
 
 
-
 def get_sub_md_files_dict(base_dir):
     sub_md_files_dict = dict()
     for each_md_file_path in base_dir.iterdir():
@@ -44,6 +43,7 @@ def check_page_weights(md_file_dict):
     ]
     if pages_with_repeated_weight:
         assert f'The following pages have repeated weight: {pages_with_repeated_weight}'
+
 
 def print_child_toc(md_file_dict):
     sorted_md_file_paths = [key for key, _ in sorted(md_file_dict.items(), key=lambda item: item[1][PAGE_WEIGHT])]
@@ -86,5 +86,3 @@ if __name__ == '__main__':
     my_md_file_dict = get_sub_md_files_dict(base_dir=my_base_dir)
     check_page_weights(md_file_dict=my_md_file_dict)
     print_child_toc(md_file_dict=my_md_file_dict)
-
-
