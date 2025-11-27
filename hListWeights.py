@@ -3,9 +3,6 @@ import argparse
 import lib.hugo_uris
 import lib.hugo_utils
 
-import lib.hugo_uris
-import lib.hugo_utils
-
 
 def get_pages_dict(base_dir):
     pages_dict = dict()
@@ -54,8 +51,8 @@ def print_dir(base_dir, current_dir, pages_dict, max_rec, current_rec=0):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        prog='hWeights.py',
-        description='lists the page weights of a markdown Hugo prokect',
+        prog='hListWeights.py',
+        description='lists the page weights of a markdown Hugo project',
     )
     parser.add_argument(
         '-p',
