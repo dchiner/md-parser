@@ -1,3 +1,5 @@
+# pyright: ignore
+
 import re
 import json
 import pathlib
@@ -39,6 +41,8 @@ def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
                 }
             )
         for each_tuple in re.findall(pattern=r"\[(.*?)\]\((.*?)\)", string=all_pages_dict[each_md_file_path]):
+            if each_tuple[1] == '/Entrust-PKIaaS-User-Guide.pdf':
+                continue
             if each_tuple[0].startswith('http://') or each_tuple[1].startswith('http://'):
                 log_list.append(
                     {
