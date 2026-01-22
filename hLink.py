@@ -19,6 +19,7 @@ if args.uri.startswith(lib.hugo_uris.BASE_URL_LOCAL):
     file_path = lib.hugo_utils.url2path(file_url=args.uri, base_dir=lib.hugo_uris.BASE_DIR)
     hugo_file = pathlib.Path(file_path)
 else:
+    assert not args.uri.startswith('http'), f'Only local file paths or {lib.hugo_uris.BASE_URL_LOCAL} URLs are supported'
     hugo_file = pathlib.Path(args.uri)
 assert hugo_file.exists(), f'File {hugo_file} not found'
 file_contents = hugo_file.read_text(encoding='utf-8')
