@@ -1,5 +1,3 @@
-# pyright: ignore
-
 import re
 import json
 import pathlib
@@ -11,27 +9,44 @@ import lib.hugo_uris
 PNG_MAX_WIDTH = 750
 ERROR_BROKEN_EXTERNAL_ANCHOR = 'Broken external anchor'
 ERROR_BROKEN_LINK = 'Broken link'
-ERROR_EMPTY_TITLE = 'Empty file'
+ERROR_EMPTY_FILE = 'Empty file'
 ERROR_HTTP_LINK = 'HTTP link'
 ERROR_LINK_NOT_STARTING_WITH_SLASH = 'Link not starting with slash ("/")'
 ERROR_NON_MATCHING_RAW_HTTPS_URL = 'Non-matching raw HTTPS URL'
 ERROR_NON_MATCHING_TITLE = 'No matching title'
+ERROR_NON_STANDARD_CHAR = 'Non-standard character in file'
 ERROR_PNG_WIDTH_TO_LARGE = f'Picture width exceeding {PNG_MAX_WIDTH} pixels'
 ERROR_UNUSED_PNG_FILE = 'Unused PNG file'
 LABEL_DETECTED_ON_ANCHOR = 'Detected on anchor'
+NON_STANDARD_CHAR_MATCHES = 'Non-standard character matches'
 LABEL_DETECTED_ON_FILE = 'Detected on file'
 LABEL_DETECTED_ON_URL = 'Detected on URL'
 LABEL_ERRORS = 'ERRORS'
 LABEL_EXTERNAL_LINKS = 'External links'
+NON_STANDARD_CHAR_PATTERN = r'[\u200B\u200C\u200D\u2060]'
 
 
-def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
+def parse_md(base_dir: pathlib.Path, all_pages_dict: dict[pathlib.Path, str], log_list: list[dict[str, str]], external_links_set: set[str], max_png_width: int):
     for each_md_file_path in all_pages_dict:
         print('Parsing', each_md_file_path)
+        non_standard_char_matches = re.findall(NON_STANDARD_CHAR_PATTERN, all_pages_dict[each_md_file_path])
+        if non_standard_char_matches:
+            log_list.append(
+                {
+                    LABEL_ERROR_TYPE: ERROR_NON_STANDARD_CHAR,
+                    LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
+                    LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
+                        file_path=each_md_file_path,
+                        base_url=lib.hugo_uris.BASE_URL_LOCAL,
+                        base_dir=lib.hugo_uris.BASE_DIR
+                    ),
+                    NON_STANDARD_CHAR_MATCHES: ','.join([repr(each_char) for each_char in set(non_standard_char_matches)])
+                }
+            )
         if lib.hugo_utils.is_empty(file_content=all_pages_dict[each_md_file_path]):
             log_list.append(
                 {
-                    LABEL_ERROR_TYPE: 'Empty file',
+                    LABEL_ERROR_TYPE: ERROR_EMPTY_FILE,
                     LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
                     LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                         file_path=each_md_file_path,
@@ -92,7 +107,7 @@ def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
                 continue
             each_linked_file_path = lib.hugo_utils.get_linked_file_path(
                 path_link=each_tuple[1],
-                base_dir=lib.hugo_uris.BASE_DIR
+                base_dir=base_dir
             )
             if not each_linked_file_path:
                 log_list.append(
@@ -156,7 +171,7 @@ def parse_md(all_pages_dict, log_list, external_links_set, max_png_width):
                 )
 
 
-def check_unused_png_files(base_dir, log_dict, all_md_dict):
+def check_unused_png_files(base_dir: pathlib.Path, log_dict: list[dict[str, str]], all_md_dict: dict[pathlib.Path, str]):
     for each_png_file_path in base_dir.joinpath('img').rglob(pattern='*.png'):
         each_page_include_list = [
             each_page_contents for each_page_contents in all_md_dict.values()
@@ -170,6 +185,22 @@ def check_unused_png_files(base_dir, log_dict, all_md_dict):
                 }
             )
 
+def parse_res(log_list :list[dict[str, str]]):
+        error_keys = [each_item[LABEL_ERROR_TYPE] for each_item in log_list]
+        [print(f'{each_error_key}: {error_keys.count(each_error_key)}') for each_error_key in set(error_keys)]
+        output_json_file_path = pathlib.Path().home() / 'Downloads/log.json'
+        print(f'Saving file://{output_json_file_path.as_posix()}')
+        json.dump(
+            obj=sorted(my_log_list, key=lambda x: x[LABEL_ERROR_TYPE]),
+            fp=output_json_file_path.open(mode='w')
+        )    
+
+def delete_unused_files(log_list :list[dict[str, str]]):
+        for each_item in log_list:
+            if each_item[LABEL_ERROR_TYPE] == ERROR_UNUSED_PNG_FILE:
+                each_png_file = pathlib.Path(each_item[LABEL_DETECTED_ON_FILE])
+                print('Removing', each_png_file)
+                each_png_file.unlink()            
 
 LABEL_ERROR_TYPE = 'Error type'
 if __name__ == '__main__':
@@ -181,10 +212,11 @@ if __name__ == '__main__':
         description='checks the files in the Hugo project',
     )
     parser.add_argument(
-        '-o',
-        '--open',
-        action='store_true',
-        help='open the generated JSON log in browser'
+        '-b',
+        '--base-dir',
+        type=pathlib.Path,
+        default=lib.hugo_uris.BASE_DIR,
+        help=f'Hugo base directory. Defaults to {lib.hugo_uris.BASE_DIR}'
     )
     parser.add_argument(
         '-e',
@@ -199,15 +231,19 @@ if __name__ == '__main__':
         help='delete unused PGN files'
     )
     args = parser.parse_args()
-    my_pages_dict = lib.hugo_utils.get_pages_dict(base_dir=lib.hugo_uris.BASE_DIR)
-    my_log_list = list()
-    my_external_links_set = set()
+    my_base_dir = pathlib.Path(args.base_dir)
+    assert my_base_dir.exists(), f'Base directory {my_base_dir} does not exist'
+    assert my_base_dir.is_dir(), f'Base directory {my_base_dir} is not a directory'
+    my_pages_dict : dict[pathlib.Path, str] = lib.hugo_utils.get_pages_dict(base_dir=my_base_dir)
+    my_log_list : list[dict[str, str]]= list()
+    my_external_links_set : set[str] = set()
     my_max_png_width = 750
     parse_md(
         all_pages_dict=my_pages_dict,
         log_list=my_log_list,
         max_png_width=my_max_png_width,
-        external_links_set=my_external_links_set
+        external_links_set=my_external_links_set,
+        base_dir=my_base_dir
     )
     check_unused_png_files(
         log_dict=my_log_list,
@@ -216,16 +252,7 @@ if __name__ == '__main__':
     )
     print('=' * 103)
     if my_log_list:
-        error_keys = [each_item[LABEL_ERROR_TYPE] for each_item in my_log_list]
-        [print(f'{each_error_key}: {error_keys.count(each_error_key)}') for each_error_key in set(error_keys)]
-        output_json_file_path = pathlib.Path().home() / 'Downloads/log.json'
-        print(f'Saving file://{output_json_file_path.as_posix()}')
-        json.dump(
-            obj=sorted(my_log_list, key=lambda x: x[LABEL_ERROR_TYPE]),
-            fp=output_json_file_path.open(mode='w')
-        )
-        if args.open:
-            lib.hugo_utils.open_in_browser(file_path=output_json_file_path)
+        parse_res(log_list=my_log_list)
     else:
         print('No errors detected')
     if args.external:
@@ -241,8 +268,4 @@ if __name__ == '__main__':
             except requests.exceptions.RequestException as e:
                 print('ERROR', each_url)
     if args.delete:
-        for each_item in my_log_list:
-            if each_item[LABEL_ERROR_TYPE] == ERROR_UNUSED_PNG_FILE:
-                each_png_file = pathlib.Path(each_item[LABEL_DETECTED_ON_FILE])
-                print('Removing', each_png_file)
-                each_png_file.unlink()
+        delete_unused_files(log_list=my_log_list)

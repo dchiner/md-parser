@@ -70,8 +70,8 @@ def is_empty(file_content: str) -> bool:
 
 def get_pages_dict(base_dir: pathlib.Path) -> dict[pathlib.Path, str]:
     pages_dict: dict[pathlib.Path, str ] = dict()
-    for each_md_file_path in pathlib.Path(base_dir).rglob('*.md'):
-        pages_dict[each_md_file_path] = pathlib.Path(each_md_file_path).read_text(encoding='utf8')
+    for each_md_file_path in base_dir.rglob('*.md'):
+        pages_dict[each_md_file_path] = each_md_file_path.read_text(encoding='utf8')
     return pages_dict
 
 
