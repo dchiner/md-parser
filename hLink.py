@@ -26,11 +26,3 @@ page_title = file_contents.split('title: "').pop().split('"')[0]
 page_link_url = hugo_file.relative_to(lib.hugo_uris.BASE_DIR)
 page_link_url = page_link_url.as_posix().split('_index.md')[0].split('.md')[0]
 print(f'[{page_title}](/{page_link_url})')
-
-
-'''
-BASE_URL_DEV = 'https://docs.dev.pkihub.com'
-BASE_URL_LOCAL = 'http://localhost:1313'
-BASE_URL_DEMO = 'https://docdemo.entrust.com:9993'
-PRODUCTION_URL_DEMO = 'https://docs.pkiaas.entrust.com'
-'''

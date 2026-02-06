@@ -1,13 +1,12 @@
 import pathlib
 import lib.hugo_utils
-import lib.hugo_uris
 
 PAGE_WEIGHT = 'PAGE_WEIGHT'
 PAGE_TITLE = 'PAGE_TITLE'
 
 
-def get_sub_md_files_dict(base_dir):
-    sub_md_files_dict = dict()
+def get_sub_md_files_dict(base_dir: pathlib.Path) -> dict[pathlib.Path, dict[str, int | str]]:
+    sub_md_files_dict : dict[pathlib.Path, dict[str, int | str]] = dict()
     for each_md_file_path in base_dir.iterdir():
         if each_md_file_path.name == '_index.md':
             continue
@@ -27,7 +26,7 @@ def get_sub_md_files_dict(base_dir):
     return sub_md_files_dict
 
 
-def check_page_weights(md_file_dict):
+def check_page_weights(md_file_dict: dict[pathlib.Path, dict[str, int | str]]):
     pages_without_weight = [
         str(each_md_page_path) for each_md_page_path in md_file_dict
         if not md_file_dict[each_md_page_path][PAGE_WEIGHT]
@@ -45,7 +44,7 @@ def check_page_weights(md_file_dict):
         assert f'The following pages have repeated weight: {pages_with_repeated_weight}'
 
 
-def print_child_toc(md_file_dict):
+def print_child_toc(md_file_dict: dict[pathlib.Path, dict[str, int | str]]):
     sorted_md_file_paths = [key for key, _ in sorted(md_file_dict.items(), key=lambda item: item[1][PAGE_WEIGHT])]
     for each_md_file_path in sorted_md_file_paths:
         each_page_title = md_file_dict[each_md_file_path][PAGE_TITLE]
@@ -83,6 +82,6 @@ if __name__ == '__main__':
         my_base_dir = pathlib.Path(args.path)
     assert my_base_dir.exists(), f'Path not found: {my_base_dir}'
     assert my_base_dir.is_dir(), f'Not a folder {my_base_dir}'
-    my_md_file_dict = get_sub_md_files_dict(base_dir=my_base_dir)
+    my_md_file_dict : dict[pathlib.Path, dict[str, int | str]] = get_sub_md_files_dict(base_dir=my_base_dir)
     check_page_weights(md_file_dict=my_md_file_dict)
     print_child_toc(md_file_dict=my_md_file_dict)

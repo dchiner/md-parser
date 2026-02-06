@@ -4,12 +4,12 @@ import argparse
 
 parser = argparse.ArgumentParser(
     prog='hIncWeights.py',
-    description='lists the page weights of a markdown Hugo prokect',
+    description='lists the page weights of a markdown Hugo project',
 )
 parser.add_argument(
     '-p',
     '--path',
-    help=f'increase the weigth in the first-level sections under PATH'
+    help=f'increase the weight in the first-level sections under PATH'
 )
 parser.add_argument(
     '-i',
@@ -23,7 +23,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 base_dir = pathlib.Path(args.path)
-weights_dict = dict()
+weights_dict : dict[int, dict[str, pathlib.Path | int]] = dict()
 assert base_dir.is_dir(), f'"{base_dir}" is not a directory'
 for each_file_path in base_dir.iterdir():
     if each_file_path.name == 'img':
@@ -41,11 +41,9 @@ for each_file_path in base_dir.iterdir():
         continue
     assert f'weight: {each_page_weight}' in each_page_contents, f'No valid format in {each_markdown_file_path}'
     each_new_page_weight = each_page_weight + int(args.increment)
-    weights_dict[each_page_weight] = {'path': each_file_path, 'new': each_new_page_weight}
     each_page_contents = each_page_contents.replace(
         f'weight: {each_page_weight}',
         f'weight: {each_new_page_weight}'
     )
+    print(f'{str(each_markdown_file_path).ljust(40)}{each_page_weight} -> {each_new_page_weight}')
     each_markdown_file_path.write_text(data=each_page_contents, encoding='utf8')
-for each_weight in sorted(weights_dict.keys()):
-    print(weights_dict[each_weight]['path'].name.ljust(12), each_weight, '->', weights_dict[each_weight]['new'])

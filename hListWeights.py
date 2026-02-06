@@ -4,32 +4,36 @@ import lib.hugo_uris
 import lib.hugo_utils
 
 
-def get_pages_dict(base_dir):
-    pages_dict = dict()
+class MarkdownFile:
+
+    def __init__(self, file_path: pathlib.Path):
+        page_contents = file_path.read_text(encoding='utf8')
+        self.title = lib.hugo_utils.get_page_title(file_contents=page_contents)
+        self.weight = lib.hugo_utils.get_page_weight(
+            file_contents=page_contents,
+            no_weigh_found=lib.hugo_utils.NO_WEIGHT_FOUND.silent
+        )
+
+
+
+def get_page_dicts(base_dir: pathlib.Path) -> dict[pathlib.Path, MarkdownFile]:
+    md_pages_dict : dict[pathlib.Path, MarkdownFile] = dict()
     for each_md_file_path in base_dir.rglob('*.md'):
         if each_md_file_path == base_dir / '_index.md':
             continue
-        if each_md_file_path == base_dir / 'img':
-            continue
-        each_file_contents = each_md_file_path.read_text(encoding='utf8')
-        each_file_title = lib.hugo_utils.get_page_title(file_contents=each_file_contents)
-        each_file_weight = lib.hugo_utils.get_page_weight(
-            file_contents=each_file_contents,
-            no_weigh_found=lib.hugo_utils.NO_WEIGHT_FOUND.silent
-        )
+        each_md_file: MarkdownFile = MarkdownFile(file_path=each_md_file_path)
         if each_md_file_path.name == '_index.md':
             each_md_file_path = each_md_file_path.parent
-        pages_dict[each_md_file_path] = {'title': each_file_title, 'weight': each_file_weight}
-    return pages_dict
+        md_pages_dict[each_md_file_path] = each_md_file
+    return md_pages_dict
 
 
-def print_dir(base_dir, current_dir, pages_dict, max_rec, current_rec=0):
-    sub_files_list = [each_path for each_path in pages_dict if each_path.parent == current_dir]
-    weight_list = [pages_dict[each_path]['weight'] for each_path in sub_files_list]
-    for each_weight in sorted(weight_list):
+def print_dir(base_dir: pathlib.Path, current_dir: pathlib.Path, pages_dict: dict[pathlib.Path, MarkdownFile], max_rec: int, current_rec: int =0):
+    weights_list : list[int] = [pages_dict[each_path].weight for each_path in current_dir.iterdir() if each_path in pages_dict]
+    for each_weight in sorted(weights_list):
         each_path = [
-            sub_file_path for sub_file_path in sub_files_list
-            if pages_dict[sub_file_path]['weight'] == each_weight
+            each_sub_file_path for each_sub_file_path in current_dir.iterdir() 
+            if each_sub_file_path in pages_dict and pages_dict[each_sub_file_path].weight == each_weight
         ].pop()
         each_relative_path = each_path.relative_to(lib.hugo_uris.BASE_DIR).as_posix()
         each_pretty_path = ' ' * each_relative_path.rfind('/')
@@ -37,7 +41,7 @@ def print_dir(base_dir, current_dir, pages_dict, max_rec, current_rec=0):
         each_pretty_path += each_relative_path[each_relative_path.rfind('/') + 1:]
         print(
             each_pretty_path.ljust(50),
-            pages_dict[each_path]['title'].ljust(70),
+            pages_dict[each_path].title.ljust(70),
         )
         if (current_rec < max_rec) and each_path.is_dir():
             print_dir(
@@ -69,7 +73,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     my_base_dir = pathlib.Path(args.path)
-    my_pages_dict = get_pages_dict(base_dir=my_base_dir)
+    my_pages_dict = get_page_dicts(base_dir=my_base_dir)
     print_dir(
         base_dir=my_base_dir,
         current_dir=my_base_dir,
