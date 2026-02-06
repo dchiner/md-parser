@@ -1,3 +1,3 @@
 # Hugo markdown manager
 
-Miscellaneous tools to manage a Hugo Markdown project
+Miscellaneous tools to manage a Hugo narkdown project
