@@ -21,6 +21,8 @@ if args.uri.startswith('http'):
 else:
     hugo_file = pathlib.Path(args.uri)
 assert hugo_file.exists(), f'File {hugo_file} not found'
+if hugo_file.is_dir():
+    hugo_file = hugo_file.joinpath('_index.md')
 file_contents = hugo_file.read_text(encoding='utf-8')
 page_title = file_contents.split('title: "').pop().split('"')[0]
 page_link_url = hugo_file.relative_to(lib.hugo_uris.BASE_DIR)

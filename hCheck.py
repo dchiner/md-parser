@@ -2,51 +2,27 @@ import re
 import json
 import pathlib
 import requests
-import PIL.Image
+import collections
 import lib.hugo_utils
 import lib.hugo_uris
 
-PNG_MAX_WIDTH = 750
-ERROR_BROKEN_EXTERNAL_ANCHOR = 'Broken external anchor'
-ERROR_BROKEN_LINK = 'Broken link'
-ERROR_EMPTY_FILE = 'Empty file'
-ERROR_HTTP_LINK = 'HTTP link'
-ERROR_LINK_NOT_STARTING_WITH_SLASH = 'Link not starting with slash ("/")'
-ERROR_NON_MATCHING_RAW_HTTPS_URL = 'Non-matching raw HTTPS URL'
-ERROR_NON_MATCHING_TITLE = 'No matching title'
-ERROR_NON_STANDARD_CHAR = 'Non-standard character in file'
-ERROR_PNG_WIDTH_TO_LARGE = f'Picture width exceeding {PNG_MAX_WIDTH} pixels'
-ERROR_UNUSED_PNG_FILE = 'Unused PNG file'
 LABEL_DETECTED_ON_ANCHOR = 'Detected on anchor'
-NON_STANDARD_CHAR_MATCHES = 'Non-standard character matches'
 LABEL_DETECTED_ON_FILE = 'Detected on file'
 LABEL_DETECTED_ON_URL = 'Detected on URL'
-LABEL_ERRORS = 'ERRORS'
-LABEL_EXTERNAL_LINKS = 'External links'
+LABEL_NON_STANDARD_CHAR_MATCHES = 'Non-standard character matches'
 NON_STANDARD_CHAR_PATTERN = r'[\u200B\u200C\u200D\u2060]'
+PDF_FILE_PATH = '/Entrust-PKIaaS-User-Guide.pdf'
 
 
-def parse_md(base_dir: pathlib.Path, all_pages_dict: dict[pathlib.Path, str], log_list: list[dict[str, str]], external_links_set: set[str], max_png_width: int):
-    for each_md_file_path in all_pages_dict:
-        print('Parsing', each_md_file_path)
-        non_standard_char_matches = re.findall(NON_STANDARD_CHAR_PATTERN, all_pages_dict[each_md_file_path])
-        if non_standard_char_matches:
-            log_list.append(
+def check_not_sized_imgs(error_log: collections.defaultdict[str, list], pages_dict: dict[pathlib.Path, str], each_md_file_path: pathlib.Path):
+        each_img_split_list = pages_dict[each_md_file_path].split('webp)')
+        for each_img_split in each_img_split_list[1:]:
+            if each_img_split.strip().startswith('{width="'):
+              continue
+            if each_img_split.strip().startswith('{ width="'):
+              continue
+            error_log['Image without size specified'].append(
                 {
-                    LABEL_ERROR_TYPE: ERROR_NON_STANDARD_CHAR,
-                    LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
-                    LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
-                        file_path=each_md_file_path,
-                        base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                        base_dir=lib.hugo_uris.BASE_DIR
-                    ),
-                    NON_STANDARD_CHAR_MATCHES: ','.join([repr(each_char) for each_char in set(non_standard_char_matches)])
-                }
-            )
-        if lib.hugo_utils.is_empty(file_content=all_pages_dict[each_md_file_path]):
-            log_list.append(
-                {
-                    LABEL_ERROR_TYPE: ERROR_EMPTY_FILE,
                     LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
                     LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                         file_path=each_md_file_path,
@@ -55,13 +31,40 @@ def parse_md(base_dir: pathlib.Path, all_pages_dict: dict[pathlib.Path, str], lo
                     )
                 }
             )
-        for each_tuple in re.findall(pattern=r"\[(.*?)\]\((.*?)\)", string=all_pages_dict[each_md_file_path]):
-            if each_tuple[1] == '/Entrust-PKIaaS-User-Guide.pdf':
+
+def check_chars(error_log: collections.defaultdict[str, list], pages_dict: dict[pathlib.Path, str], each_md_file_path: pathlib.Path):
+        non_standard_char_matches = re.findall(NON_STANDARD_CHAR_PATTERN, pages_dict[each_md_file_path])
+        if non_standard_char_matches:
+            error_log['Non-standard character'].append(
+                {
+                    LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
+                    LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
+                        file_path=each_md_file_path,
+                        base_url=lib.hugo_uris.BASE_URL_LOCAL,
+                        base_dir=lib.hugo_uris.BASE_DIR
+                    ),
+                    LABEL_NON_STANDARD_CHAR_MATCHES: ','.join([repr(each_char) for each_char in set(non_standard_char_matches)])
+                }
+            )
+def check_is_empty(error_log: collections.defaultdict[str, list], pages_dict: dict[pathlib.Path, str], each_md_file_path: pathlib.Path):
+        if lib.hugo_utils.is_empty(file_content=pages_dict[each_md_file_path]):
+            error_log['Empty file'].append(
+                {
+                    LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
+                    LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
+                        file_path=each_md_file_path,
+                        base_url=lib.hugo_uris.BASE_URL_LOCAL,
+                        base_dir=lib.hugo_uris.BASE_DIR
+                    )
+                }
+            )
+def check_links(error_log: collections.defaultdict[str, list], pages_dict: dict[pathlib.Path, str], each_md_file_path: pathlib.Path, external_links_set: set[str], base_dir: pathlib.Path):
+        for each_tuple in re.findall(pattern=r"\[(.*?)\]\((.*?)\)", string=pages_dict[each_md_file_path]):
+            if each_tuple[1] == PDF_FILE_PATH:
                 continue
             if each_tuple[0].startswith('http://') or each_tuple[1].startswith('http://'):
-                log_list.append(
+                error_log['HTTP link'].append(
                     {
-                        LABEL_ERROR_TYPE: 'HTTP link',
                         LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
                         LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                             file_path=each_md_file_path,
@@ -73,9 +76,8 @@ def parse_md(base_dir: pathlib.Path, all_pages_dict: dict[pathlib.Path, str], lo
                 )
                 continue
             if each_tuple[0].startswith('https://') and each_tuple[0] != each_tuple[1]:
-                log_list.append(
+                error_log['Non-matching raw HTTPS URL'].append(
                     {
-                        LABEL_ERROR_TYPE: 'Non-matching raw HTTPS URL',
                         LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
                         LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                             file_path=each_md_file_path,
@@ -92,9 +94,8 @@ def parse_md(base_dir: pathlib.Path, all_pages_dict: dict[pathlib.Path, str], lo
             if each_tuple[1].startswith('#'):
                 continue
             if not each_tuple[1].startswith('/'):
-                log_list.append(
+                error_log['Link not starting with slash'].append(
                     {
-                        LABEL_ERROR_TYPE: 'Link not starting with slash ("/")',
                         LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
                         LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                             file_path=each_md_file_path,
@@ -110,9 +111,8 @@ def parse_md(base_dir: pathlib.Path, all_pages_dict: dict[pathlib.Path, str], lo
                 base_dir=base_dir
             )
             if not each_linked_file_path:
-                log_list.append(
+                error_log['Broken link'].append(
                     {
-                        LABEL_ERROR_TYPE: 'Broken link',
                         LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
                         LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                             file_path=each_md_file_path,
@@ -123,29 +123,13 @@ def parse_md(base_dir: pathlib.Path, all_pages_dict: dict[pathlib.Path, str], lo
                     }
                 )
                 continue
-            if each_linked_file_path.suffix == '.png':
-                with PIL.Image.open(each_linked_file_path) as png_file:
-                    each_img_size = png_file.size
-                if each_img_size[0] > max_png_width:
-                    log_list.append(
-                        {
-                            LABEL_ERROR_TYPE: f'Picture width exceeding {max_png_width} pixels',
-                            LABEL_DETECTED_ON_FILE: each_linked_file_path.as_posix(),
-                            LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
-                                file_path=each_md_file_path,
-                                base_dir=lib.hugo_uris.BASE_DIR,
-                                base_url=lib.hugo_uris.BASE_URL_LOCAL
-                            ),
-                            LABEL_DETECTED_ON_ANCHOR: each_tuple
-                        }
-                    )
+            if each_linked_file_path.suffix in ['.webp', '.png', '.jpg', '.jpeg']:
                 continue
             if '#' in each_tuple[1]:
                 each_anchor = each_tuple[1].split('#').pop().replace('-', ' ')
-                if f'# {each_anchor}' not in all_pages_dict[each_linked_file_path].lower().replace('-', ' '):
-                    log_list.append(
+                if f'# {each_anchor}' not in pages_dict[each_linked_file_path].lower().replace('-', ' '):
+                    error_log['Broken external anchor'].append(
                         {
-                            LABEL_ERROR_TYPE: 'Broken external anchor',
                             LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
                             LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                                 file_path=each_md_file_path,
@@ -156,10 +140,9 @@ def parse_md(base_dir: pathlib.Path, all_pages_dict: dict[pathlib.Path, str], lo
                         }
                     )
                 continue
-            if each_tuple[0] != lib.hugo_utils.get_page_title(file_contents=all_pages_dict[each_linked_file_path]):
-                log_list.append(
+            if each_tuple[0] != lib.hugo_utils.get_page_title(file_contents=pages_dict[each_linked_file_path]):
+                error_log['Non-matching title'].append(
                     {
-                        LABEL_ERROR_TYPE: 'No matching title',
                         LABEL_DETECTED_ON_FILE: each_md_file_path.as_posix(),
                         LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                             file_path=each_md_file_path,
@@ -171,41 +154,33 @@ def parse_md(base_dir: pathlib.Path, all_pages_dict: dict[pathlib.Path, str], lo
                 )
 
 
-def check_unused_png_files(base_dir: pathlib.Path, log_dict: list[dict[str, str]], all_md_dict: dict[pathlib.Path, str]):
-    for each_png_file_path in base_dir.joinpath('img').rglob(pattern='*.png'):
+def check_unused_img_files(img_dir: pathlib.Path, error_log: dict[str, list], all_md_dict: dict[pathlib.Path, str]):
+    for each_img_file_path in img_dir.rglob(pattern='*.webp'):
         each_page_include_list = [
             each_page_contents for each_page_contents in all_md_dict.values()
-            if each_png_file_path.name in each_page_contents
+            if each_img_file_path.name in each_page_contents
         ]
         if not each_page_include_list:
-            log_dict.append(
+            error_log['Unused image file'].append(
                 {
-                    LABEL_ERROR_TYPE: 'Unused PNG file',
-                    LABEL_DETECTED_ON_FILE: each_png_file_path.as_posix(),
+                    LABEL_DETECTED_ON_FILE: each_img_file_path.as_posix(),
                 }
             )
 
-def parse_res(log_list :list[dict[str, str]]):
-        error_keys = [each_item[LABEL_ERROR_TYPE] for each_item in log_list]
-        [print(f'{each_error_key}: {error_keys.count(each_error_key)}') for each_error_key in set(error_keys)]
-        output_json_file_path = pathlib.Path().home() / 'Downloads/log.json'
-        print(f'Saving file://{output_json_file_path.as_posix()}')
-        json.dump(
-            obj=sorted(my_log_list, key=lambda x: x[LABEL_ERROR_TYPE]),
-            fp=output_json_file_path.open(mode='w')
-        )    
+def parse_res(error_log: dict[str, list]):
+    [print(f'{each_error_key}: {len(error_log[each_error_key])}') for each_error_key in error_log.keys()]
+    output_json_file_path = pathlib.Path().home() / 'Downloads/log.json'
+    print(f'Saving file://{output_json_file_path.as_posix()}')
+    json.dump(obj=error_log, fp=output_json_file_path.open(mode='w'))
 
-def delete_unused_files(log_list :list[dict[str, str]]):
-        for each_item in log_list:
-            if each_item[LABEL_ERROR_TYPE] == ERROR_UNUSED_PNG_FILE:
-                each_png_file = pathlib.Path(each_item[LABEL_DETECTED_ON_FILE])
-                print('Removing', each_png_file)
-                each_png_file.unlink()            
+def delete_unused_files(error_log: dict[str, list]):
+    for each_item in error_log[ERROR_UNUSED_IMG_FILE]:
+        each_img_file = pathlib.Path(each_item[LABEL_DETECTED_ON_FILE])
+        print('Removing', each_img_file)
+        each_img_file.unlink()            
 
-LABEL_ERROR_TYPE = 'Error type'
 if __name__ == '__main__':
     import argparse
-    import lib.hugo_utils
 
     parser = argparse.ArgumentParser(
         prog='hCheck.py',
@@ -235,24 +210,40 @@ if __name__ == '__main__':
     assert my_base_dir.exists(), f'Base directory {my_base_dir} does not exist'
     assert my_base_dir.is_dir(), f'Base directory {my_base_dir} is not a directory'
     my_pages_dict : dict[pathlib.Path, str] = lib.hugo_utils.get_pages_dict(base_dir=my_base_dir)
-    my_log_list : list[dict[str, str]]= list()
+    my_error_log = collections.defaultdict(list) 
     my_external_links_set : set[str] = set()
-    my_max_png_width = 750
-    parse_md(
-        all_pages_dict=my_pages_dict,
-        log_list=my_log_list,
-        max_png_width=my_max_png_width,
-        external_links_set=my_external_links_set,
-        base_dir=my_base_dir
-    )
-    check_unused_png_files(
-        log_dict=my_log_list,
+    for each_md_file_path in my_pages_dict:
+        print('Checking', each_md_file_path)
+        check_not_sized_imgs(
+            error_log=my_error_log,
+            pages_dict=my_pages_dict,
+            each_md_file_path=each_md_file_path
+        )
+        check_chars(
+            error_log=my_error_log,
+            pages_dict=my_pages_dict,
+            each_md_file_path=each_md_file_path
+        )
+        check_is_empty(
+            error_log=my_error_log,
+            pages_dict=my_pages_dict,
+            each_md_file_path=each_md_file_path
+        )
+        check_links(
+            error_log=my_error_log,
+            pages_dict=my_pages_dict,
+            each_md_file_path=each_md_file_path,
+            external_links_set=my_external_links_set,
+            base_dir=my_base_dir
+        )
+    check_unused_img_files(
+        error_log=my_error_log,
         all_md_dict=my_pages_dict,
-        base_dir=lib.hugo_uris.BASE_DIR
+        img_dir=lib.hugo_uris.BASE_DIR.parent.joinpath('static/img/screenshots')
     )
     print('=' * 103)
-    if my_log_list:
-        parse_res(log_list=my_log_list)
+    if my_error_log:
+        parse_res(error_log=my_error_log)
     else:
         print('No errors detected')
     if args.external:
@@ -265,7 +256,7 @@ if __name__ == '__main__':
                     print('OK'.ljust(len('ERROR')), each_url)
                 else:
                     print('ERROR', each_url)
-            except requests.exceptions.RequestException as e:
+            except requests.exceptions.RequestException:
                 print('ERROR', each_url)
     if args.delete:
-        delete_unused_files(log_list=my_log_list)
+        delete_unused_files(error_log=my_error_log)

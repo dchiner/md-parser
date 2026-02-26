@@ -23,8 +23,8 @@ def url2path(file_url: str, base_dir: pathlib.Path) -> pathlib.Path:
     file_path = base_dir.joinpath('/'.join(file_url.split('/')[3:]))
     if file_path.with_suffix(suffix='.md').exists():
         return file_path.with_suffix(suffix='.md')
-    elif file_path.with_suffix(suffix='.png').exists():
-        return file_path.with_suffix(suffix='.png')
+    elif file_path.with_suffix(suffix='.webp').exists():
+        return file_path.with_suffix(suffix='.webp')
     return file_path.joinpath('_index.md')
 
 
@@ -32,15 +32,15 @@ def get_linked_file_path(path_link: str, base_dir: pathlib.Path) -> pathlib.Path
     file_relative_path = path_link[1:].split('/#')[0].split('#')[0]
     if file_relative_path.endswith('/'):
         file_relative_path = file_relative_path[:-1]
-    png_abs_path = base_dir.joinpath(file_relative_path)
-    if png_abs_path.suffix == '.png' and png_abs_path.exists():
-        return png_abs_path
-    index_file_path = base_dir.joinpath(file_relative_path).joinpath('_index.md')
-    if index_file_path.exists():
-        return index_file_path
-    md_file_path = base_dir.joinpath(f'{file_relative_path}.md')
-    if md_file_path.exists():
-        return md_file_path
+    img_abs_file_path = base_dir.parent / 'static' / file_relative_path
+    if img_abs_file_path.exists():
+        return img_abs_file_path
+    index_abs_file_path = base_dir.joinpath(file_relative_path).joinpath('_index.md')
+    if index_abs_file_path.exists():
+        return index_abs_file_path
+    md_abs_file_path = base_dir.joinpath(f'{file_relative_path}.md')
+    if md_abs_file_path.exists():
+        return md_abs_file_path
     return None
 
 
@@ -77,7 +77,7 @@ def get_pages_dict(base_dir: pathlib.Path) -> dict[pathlib.Path, str]:
 
 def open_in_editor(file_path: pathlib.Path):
     import os
-    if file_path.suffix == '.png':
+    if file_path.suffix == '.webp':
         app_name = 'Microsoft Paint'
         app_exe = 'mspaint'
     else:

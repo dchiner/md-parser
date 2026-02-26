@@ -9,17 +9,20 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     '-p',
     '--path',
+    required=True,
     help=f'increase the weight in the first-level sections under PATH'
 )
 parser.add_argument(
     '-i',
     '--increment',
-    help='add INC to each weight'
+    required=True,
+    help='add INCREMENT to each weight'
 )
 parser.add_argument(
-    '-g',
-    '--greater',
-    help='increment only weights greater than GREATER'
+    '-geq',
+    '--greater_equal',
+    required=True,
+    help='increment only weights greater or equal than GREATER_EQUAL'
 )
 args = parser.parse_args()
 base_dir = pathlib.Path(args.path)
@@ -37,7 +40,7 @@ for each_file_path in base_dir.iterdir():
         file_contents=each_page_contents,
         no_weigh_found=lib.hugo_utils.NO_WEIGHT_FOUND.silent
     )
-    if each_page_weight <= int(args.greater):
+    if each_page_weight < int(args.greater_equal):
         continue
     assert f'weight: {each_page_weight}' in each_page_contents, f'No valid format in {each_markdown_file_path}'
     each_new_page_weight = each_page_weight + int(args.increment)
