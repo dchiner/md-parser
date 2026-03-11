@@ -35,7 +35,7 @@ def print_dir(base_dir: pathlib.Path, current_dir: pathlib.Path, pages_dict: dic
             each_sub_file_path for each_sub_file_path in current_dir.iterdir() 
             if each_sub_file_path in pages_dict and pages_dict[each_sub_file_path].weight == each_weight
         ].pop()
-        each_relative_path = each_path.relative_to(lib.hugo_uris.BASE_DIR).as_posix()
+        each_relative_path = each_path.relative_to(lib.hugo_uris.HUGO_CONTENT_DIR_PATH).as_posix()
         each_pretty_path = ' ' * each_relative_path.rfind('/')
         each_pretty_path += str(each_weight).ljust(5)
         each_pretty_path += each_relative_path[each_relative_path.rfind('/') + 1:]
@@ -62,8 +62,8 @@ if __name__ == '__main__':
         '-p',
         '--path',
         required=False,
-        default=lib.hugo_uris.BASE_DIR,
-        help=f'check the weights in the PATH folder. Defaults to {lib.hugo_uris.BASE_DIR}'
+        default=lib.hugo_uris.HUGO_CONTENT_DIR_PATH,
+        help=f'check the weights in the PATH folder. Defaults to {lib.hugo_uris.HUGO_CONTENT_DIR_PATH}'
     )
     parser.add_argument(
         '-r',

@@ -20,7 +20,7 @@ def get_sub_md_files_dict(base_dir: pathlib.Path) -> dict[pathlib.Path, dict[str
             PAGE_TITLE: lib.hugo_utils.get_page_title(file_contents=each_md_file_content),
             PAGE_WEIGHT: lib.hugo_utils.get_page_weight(
                 file_contents=each_md_file_content,
-                no_weigh_found=lib.hugo_utils.NO_WEIGHT_FOUND.exception
+                no_weigh_found=lib.hugo_utils.NO_WEIGHT_FOUND.silent
             )
         }
     return sub_md_files_dict

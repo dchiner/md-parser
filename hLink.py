@@ -16,7 +16,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 if args.uri.startswith('http'):
-    file_path = lib.hugo_utils.url2path(file_url=args.uri, base_dir=lib.hugo_uris.BASE_DIR)
+    file_path = lib.hugo_utils.url2path(file_url=args.uri, base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH)
     hugo_file = pathlib.Path(file_path)
 else:
     hugo_file = pathlib.Path(args.uri)
@@ -25,6 +25,6 @@ if hugo_file.is_dir():
     hugo_file = hugo_file.joinpath('_index.md')
 file_contents = hugo_file.read_text(encoding='utf-8')
 page_title = file_contents.split('title: "').pop().split('"')[0]
-page_link_url = hugo_file.relative_to(lib.hugo_uris.BASE_DIR)
+page_link_url = hugo_file.relative_to(lib.hugo_uris.HUGO_CONTENT_DIR_PATH)
 page_link_url = page_link_url.as_posix().split('_index.md')[0].split('.md')[0]
 print(f'[{page_title}](/{page_link_url})')

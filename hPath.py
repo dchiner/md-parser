@@ -22,13 +22,13 @@ parser.add_argument(
 parser.add_argument(
     '-b',
     '--base_url',
-    default=lib.hugo_uris.BASE_URL_LOCAL,
-    help=f'use BASE_URL to generate the URLs, defaults to "{lib.hugo_uris.BASE_URL_LOCAL}"'
+    default=lib.hugo_uris.HUGO_LOCAL_URL,
+    help=f'use BASE_URL to generate the URLs, defaults to "{lib.hugo_uris.HUGO_LOCAL_URL}"'
 )
 args = parser.parse_args()
 hugo_file = pathlib.Path(args.uri)
 if args.uri.startswith('http'):
-    file_path = lib.hugo_utils.url2path(file_url=args.uri, base_dir=lib.hugo_uris.BASE_DIR)
+    file_path = lib.hugo_utils.url2path(file_url=args.uri, base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH)
     print(file_path)
     if args.open:
         lib.hugo_utils.open_in_editor(file_path)
@@ -36,7 +36,7 @@ else:
     file_url = lib.hugo_utils.path2url(
         file_path=pathlib.Path(args.uri),
         base_url=args.base_url,
-        base_dir=lib.hugo_uris.BASE_DIR
+        base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
     )
     print(file_url)
     if args.open:

@@ -1,3 +1,4 @@
+import re
 import types
 import pathlib
 
@@ -67,11 +68,21 @@ def is_empty(file_content: str) -> bool:
         return True
     return False
 
+def get_shortcodes_dict(base_dir: pathlib.Path) -> dict[str, str]:
+    shortcodes_dict: dict[str, str] = dict()
+    for each_md_file_path in base_dir.rglob('*.html'):
+        shortcodes_dict[each_md_file_path.stem] = each_md_file_path.read_text(encoding='utf8')
+    return shortcodes_dict
 
-def get_pages_dict(base_dir: pathlib.Path) -> dict[pathlib.Path, str]:
+def get_pages_dict(base_dir: pathlib.Path, shortcodes_dict: dict[str, str]) -> dict[pathlib.Path, str]:
     pages_dict: dict[pathlib.Path, str ] = dict()
     for each_md_file_path in base_dir.rglob('*.md'):
-        pages_dict[each_md_file_path] = each_md_file_path.read_text(encoding='utf8')
+        each_md_file_contents = each_md_file_path.read_text(encoding='utf8')
+        for each_math in re.findall('{{<.+>}}', each_md_file_contents):
+            each_shortcode_name = each_math.split('<')[1].split('>')[0].strip()
+            assert each_shortcode_name in shortcodes_dict, f'Shortcode "{each_shortcode_name}" not found in shortcodes_dict'
+            each_md_file_contents = each_md_file_contents.replace(each_math, shortcodes_dict[each_shortcode_name])
+        pages_dict[each_md_file_path] = each_md_file_contents
     return pages_dict
 
 

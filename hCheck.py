@@ -13,6 +13,7 @@ LABEL_NON_STANDARD_CHAR_MATCHES = 'Non-standard character matches'
 NON_STANDARD_CHAR_PATTERN = r'[\u200B\u200C\u200D\u2060]'
 PDF_FILE_PATH = '/Entrust-PKIaaS-User-Guide.pdf'
 ERROR_UNUSED_IMG_FILE = 'Unused image file'
+ERROR_UNUSED_SHARED_FILE = 'Unused shared file'
 
 
 
@@ -28,8 +29,8 @@ def check_not_sized_imgs(error_log: collections.defaultdict[str, list], pages_di
                     LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
                     LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                         file_path=md_file_path,
-                        base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                        base_dir=lib.hugo_uris.BASE_DIR
+                        base_url=lib.hugo_uris.HUGO_LOCAL_URL,
+                        base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
                     )
                 }
             )
@@ -42,8 +43,8 @@ def check_chars(error_log: collections.defaultdict[str, list], pages_dict: dict[
                     LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
                     LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                         file_path=md_file_path,
-                        base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                        base_dir=lib.hugo_uris.BASE_DIR
+                        base_url=lib.hugo_uris.HUGO_LOCAL_URL,
+                        base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
                     ),
                     LABEL_NON_STANDARD_CHAR_MATCHES: ','.join([repr(each_char) for each_char in set(non_standard_char_matches)])
                 }
@@ -55,8 +56,8 @@ def check_is_empty(error_log: collections.defaultdict[str, list], pages_dict: di
                     LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
                     LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                         file_path=md_file_path,
-                        base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                        base_dir=lib.hugo_uris.BASE_DIR
+                        base_url=lib.hugo_uris.HUGO_LOCAL_URL,
+                        base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
                     )
                 }
             )
@@ -70,8 +71,8 @@ def check_links(error_log: collections.defaultdict[str, list], pages_dict: dict[
                         LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
                         LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                             file_path=md_file_path,
-                            base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                            base_dir=lib.hugo_uris.BASE_DIR
+                            base_url=lib.hugo_uris.HUGO_LOCAL_URL,
+                            base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
                         ),
                         LABEL_DETECTED_ON_ANCHOR: str(each_tuple)
                     }
@@ -83,8 +84,8 @@ def check_links(error_log: collections.defaultdict[str, list], pages_dict: dict[
                         LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
                         LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                             file_path=md_file_path,
-                            base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                            base_dir=lib.hugo_uris.BASE_DIR
+                            base_url=lib.hugo_uris.HUGO_LOCAL_URL,
+                            base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
                         ),
                         LABEL_DETECTED_ON_ANCHOR: each_tuple
                     }
@@ -101,8 +102,8 @@ def check_links(error_log: collections.defaultdict[str, list], pages_dict: dict[
                         LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
                         LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                             file_path=md_file_path,
-                            base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                            base_dir=lib.hugo_uris.BASE_DIR
+                            base_url=lib.hugo_uris.HUGO_LOCAL_URL,
+                            base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
                         ),
                         LABEL_DETECTED_ON_ANCHOR: each_tuple
                     }
@@ -118,8 +119,8 @@ def check_links(error_log: collections.defaultdict[str, list], pages_dict: dict[
                         LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
                         LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                             file_path=md_file_path,
-                            base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                            base_dir=lib.hugo_uris.BASE_DIR
+                            base_url=lib.hugo_uris.HUGO_LOCAL_URL,
+                            base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
                         ),
                         LABEL_DETECTED_ON_ANCHOR: each_tuple
                     }
@@ -135,8 +136,8 @@ def check_links(error_log: collections.defaultdict[str, list], pages_dict: dict[
                             LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
                             LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                                 file_path=md_file_path,
-                                base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                                base_dir=lib.hugo_uris.BASE_DIR
+                                base_url=lib.hugo_uris.HUGO_LOCAL_URL,
+                                base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
                             ),
                             LABEL_DETECTED_ON_ANCHOR: each_tuple
                         }
@@ -148,8 +149,8 @@ def check_links(error_log: collections.defaultdict[str, list], pages_dict: dict[
                         LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
                         LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                             file_path=md_file_path,
-                            base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                            base_dir=lib.hugo_uris.BASE_DIR
+                            base_url=lib.hugo_uris.HUGO_LOCAL_URL,
+                            base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
                         ),
                         LABEL_DETECTED_ON_ANCHOR: each_tuple
                     }
@@ -171,8 +172,8 @@ def check_child_toc(error_log: collections.defaultdict[str, list], md_file_path:
               LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
               LABEL_DETECTED_ON_URL: lib.hugo_utils.path2url(
                   file_path=md_file_path,
-                  base_url=lib.hugo_uris.BASE_URL_LOCAL,
-                  base_dir=lib.hugo_uris.BASE_DIR
+                  base_url=lib.hugo_uris.HUGO_LOCAL_URL,
+                  base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH
               ),
               LABEL_DETECTED_ON_ANCHOR: each_file_name
           }
@@ -191,6 +192,19 @@ def check_unused_img_files(img_dir: pathlib.Path, error_log: dict[str, list], al
                 }
             )
 
+def check_unused_shared_pages(shared_dir: pathlib.Path, error_log: dict[str, list], all_md_dict: dict[pathlib.Path, str]):
+    for each_shared_file_path in shared_dir.rglob(pattern='*.html'):
+        each_page_include_list = [
+            each_page_contents for each_page_contents in all_md_dict.values()
+            if each_shared_file_path.stem in each_page_contents
+        ]
+        if not each_page_include_list:
+            error_log[ERROR_UNUSED_SHARED_FILE].append(
+                {
+                    LABEL_DETECTED_ON_FILE: each_shared_file_path.as_posix(),
+                }
+            )
+
 def parse_res(error_log: dict[str, list]):
     [print(f'{each_error_key}: {len(error_log[each_error_key])}') for each_error_key in error_log.keys()]
     output_json_file_path = pathlib.Path().home() / 'Downloads/log.json'
@@ -202,6 +216,10 @@ def delete_unused_files(error_log: dict[str, list]):
         each_img_file = pathlib.Path(each_item[LABEL_DETECTED_ON_FILE])
         print('Removing', each_img_file)
         each_img_file.unlink()            
+    for each_item in error_log[ERROR_UNUSED_SHARED_FILE]:
+        each_shared_file = pathlib.Path(each_item[LABEL_DETECTED_ON_FILE])
+        print('Removing', each_shared_file)
+        each_shared_file.unlink()            
 
 if __name__ == '__main__':
     import argparse
@@ -214,8 +232,8 @@ if __name__ == '__main__':
         '-b',
         '--base-dir',
         type=pathlib.Path,
-        default=lib.hugo_uris.BASE_DIR,
-        help=f'Hugo base directory. Defaults to {lib.hugo_uris.BASE_DIR}'
+        default=lib.hugo_uris.HUGO_CONTENT_DIR_PATH,
+        help=f'Hugo base directory. Defaults to {lib.hugo_uris.HUGO_CONTENT_DIR_PATH}'
     )
     parser.add_argument(
         '-e',
@@ -227,13 +245,14 @@ if __name__ == '__main__':
         '-d',
         '--delete',
         action='store_true',
-        help='delete unused PGN files'
+        help='delete unused PNG and HTML files'
     )
     args = parser.parse_args()
     my_base_dir = pathlib.Path(args.base_dir)
     assert my_base_dir.exists(), f'Base directory {my_base_dir} does not exist'
     assert my_base_dir.is_dir(), f'Base directory {my_base_dir} is not a directory'
-    my_pages_dict : dict[pathlib.Path, str] = lib.hugo_utils.get_pages_dict(base_dir=my_base_dir)
+    my_shortcodes_dict = lib.hugo_utils.get_shortcodes_dict(base_dir=lib.hugo_uris.HUGO_SHORTCODES_DIR_PATH)
+    my_pages_dict : dict[pathlib.Path, str] = lib.hugo_utils.get_pages_dict(base_dir=my_base_dir, shortcodes_dict=my_shortcodes_dict)
     my_error_log = collections.defaultdict(list) 
     my_external_links_set : set[str] = set()
     for each_md_file_path in my_pages_dict:
@@ -269,7 +288,7 @@ if __name__ == '__main__':
     check_unused_img_files(
         error_log=my_error_log,
         all_md_dict=my_pages_dict,
-        img_dir=lib.hugo_uris.BASE_DIR.parent.joinpath('static/img/screenshots')
+        img_dir=lib.hugo_uris.HUGO_SCREENSHOTS_DIR_PATH
     )
     print('=' * 103)
     if my_error_log:
