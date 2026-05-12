@@ -70,8 +70,13 @@ def is_empty(file_content: str) -> bool:
 
 def get_shortcodes_dict(base_dir: pathlib.Path) -> dict[str, str]:
     shortcodes_dict: dict[str, str] = dict()
-    for each_md_file_path in base_dir.rglob('*.html'):
-        shortcodes_dict[each_md_file_path.stem] = each_md_file_path.read_text(encoding='utf8')
+    for each_shortcode_file_path in base_dir.rglob('*.html'):
+        each_shortcode_file_contents = each_shortcode_file_path.read_text(encoding='utf8')
+        if "`" in each_shortcode_file_contents:
+          shortcodes_dict[each_shortcode_file_path.stem] = each_shortcode_file_contents.split("`")[1].strip()          
+        else:          
+          shortcodes_dict[each_shortcode_file_path.stem] = each_shortcode_file_contents
+
     return shortcodes_dict
 
 def get_pages_dict(base_dir: pathlib.Path, shortcodes_dict: dict[str, str]) -> dict[pathlib.Path, str]:

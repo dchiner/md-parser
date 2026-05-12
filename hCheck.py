@@ -3,6 +3,7 @@ import json
 import pathlib
 import requests
 import collections
+from typing import Any
 import lib.hugo_utils
 import lib.hugo_uris
 
@@ -17,7 +18,7 @@ ERROR_UNUSED_SHARED_FILE = 'Unused shared file'
 
 
 
-def check_not_sized_imgs(error_log: collections.defaultdict[str, list], pages_dict: dict[pathlib.Path, str], md_file_path: pathlib.Path):
+def check_not_sized_imgs(error_log: collections.defaultdict[str, list[dict[str, Any]]], pages_dict: dict[pathlib.Path, str], md_file_path: pathlib.Path):
         each_img_split_list = pages_dict[md_file_path].split('webp)')
         for each_img_split in each_img_split_list[1:]:
             if each_img_split.strip().startswith('{width="'):
@@ -35,7 +36,7 @@ def check_not_sized_imgs(error_log: collections.defaultdict[str, list], pages_di
                 }
             )
 
-def check_chars(error_log: collections.defaultdict[str, list], pages_dict: dict[pathlib.Path, str], md_file_path: pathlib.Path):
+def check_chars(error_log: collections.defaultdict[str, list[dict[str, Any]]], pages_dict: dict[pathlib.Path, str], md_file_path: pathlib.Path):
         non_standard_char_matches = re.findall(NON_STANDARD_CHAR_PATTERN, pages_dict[md_file_path])
         if non_standard_char_matches:
             error_log['Non-standard character'].append(
@@ -49,7 +50,7 @@ def check_chars(error_log: collections.defaultdict[str, list], pages_dict: dict[
                     LABEL_NON_STANDARD_CHAR_MATCHES: ','.join([repr(each_char) for each_char in set(non_standard_char_matches)])
                 }
             )
-def check_is_empty(error_log: collections.defaultdict[str, list], pages_dict: dict[pathlib.Path, str], md_file_path: pathlib.Path):
+def check_is_empty(error_log: collections.defaultdict[str, list[dict[str, Any]]], pages_dict: dict[pathlib.Path, str], md_file_path: pathlib.Path):
         if lib.hugo_utils.is_empty(file_content=pages_dict[md_file_path]):
             error_log['Empty file'].append(
                 {
@@ -61,7 +62,7 @@ def check_is_empty(error_log: collections.defaultdict[str, list], pages_dict: di
                     )
                 }
             )
-def check_links(error_log: collections.defaultdict[str, list], pages_dict: dict[pathlib.Path, str], md_file_path: pathlib.Path, external_links_set: set[str], base_dir: pathlib.Path):
+def check_links(error_log: collections.defaultdict[str, list[dict[str, Any]]], pages_dict: dict[pathlib.Path, str], md_file_path: pathlib.Path, external_links_set: set[str], base_dir: pathlib.Path):
         for each_tuple in re.findall(pattern=r"\[(.*?)\]\((.*?)\)", string=pages_dict[md_file_path]):
             if each_tuple[1] == PDF_FILE_PATH:
                 continue
@@ -156,7 +157,7 @@ def check_links(error_log: collections.defaultdict[str, list], pages_dict: dict[
                     }
                 )
 
-def check_child_toc(error_log: collections.defaultdict[str, list], md_file_path: pathlib.Path, pages_dict: dict[pathlib.Path, str], base_dir: pathlib.Path):
+def check_child_toc(error_log: collections.defaultdict[str, list[dict[str, Any]]], md_file_path: pathlib.Path, pages_dict: dict[pathlib.Path, str], base_dir: pathlib.Path):
   if md_file_path.name != '_index.md':
     return
   for each_file_path in md_file_path.parent.iterdir():
@@ -179,7 +180,7 @@ def check_child_toc(error_log: collections.defaultdict[str, list], md_file_path:
           }
       )
 
-def check_unused_img_files(img_dir: pathlib.Path, error_log: dict[str, list], all_md_dict: dict[pathlib.Path, str]):
+def check_unused_img_files(img_dir: pathlib.Path, error_log: dict[str, list[dict[str, Any]]], all_md_dict: dict[pathlib.Path, str]):
     for each_img_file_path in img_dir.rglob(pattern='*.webp'):
         each_page_include_list = [
             each_page_contents for each_page_contents in all_md_dict.values()
@@ -192,7 +193,7 @@ def check_unused_img_files(img_dir: pathlib.Path, error_log: dict[str, list], al
                 }
             )
 
-def check_unused_shared_pages(shared_dir: pathlib.Path, error_log: dict[str, list], all_md_dict: dict[pathlib.Path, str]):
+def check_unused_shared_pages(shared_dir: pathlib.Path, error_log: dict[str, list[dict[str, Any]]], all_md_dict: dict[pathlib.Path, str]):
     for each_shared_file_path in shared_dir.rglob(pattern='*.html'):
         each_page_include_list = [
             each_page_contents for each_page_contents in all_md_dict.values()
@@ -205,13 +206,13 @@ def check_unused_shared_pages(shared_dir: pathlib.Path, error_log: dict[str, lis
                 }
             )
 
-def parse_res(error_log: dict[str, list]):
+def parse_res(error_log: dict[str, list[dict[str, Any]]]):
     [print(f'{each_error_key}: {len(error_log[each_error_key])}') for each_error_key in error_log.keys()]
     output_json_file_path = pathlib.Path().home() / 'Downloads/log.json'
     print(f'Saving file://{output_json_file_path.as_posix()}')
     json.dump(obj=error_log, fp=output_json_file_path.open(mode='w'))
 
-def delete_unused_files(error_log: dict[str, list]):
+def delete_unused_files(error_log: dict[str, list[dict[str, Any]]]):
     for each_item in error_log[ERROR_UNUSED_IMG_FILE]:
         each_img_file = pathlib.Path(each_item[LABEL_DETECTED_ON_FILE])
         print('Removing', each_img_file)
@@ -253,7 +254,7 @@ if __name__ == '__main__':
     assert my_base_dir.is_dir(), f'Base directory {my_base_dir} is not a directory'
     my_shortcodes_dict = lib.hugo_utils.get_shortcodes_dict(base_dir=lib.hugo_uris.HUGO_SHORTCODES_DIR_PATH)
     my_pages_dict : dict[pathlib.Path, str] = lib.hugo_utils.get_pages_dict(base_dir=my_base_dir, shortcodes_dict=my_shortcodes_dict)
-    my_error_log = collections.defaultdict(list) 
+    my_error_log : collections.defaultdict[str, list[dict[str, Any]]] = collections.defaultdict(list) 
     my_external_links_set : set[str] = set()
     for each_md_file_path in my_pages_dict:
         print('Checking', each_md_file_path)
