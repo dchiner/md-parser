@@ -7,16 +7,18 @@ from typing import Any
 import lib.hugo_utils
 import lib.hugo_uris
 
-LABEL_DETECTED_ON_ANCHOR = "Detected on anchor"
-LABEL_DETECTED_ON_FILE = "Detected on file"
-LABEL_DETECTED_ON_URL = "Detected on URL"
-LABEL_REPEATED_WEIGHTS = "Repeated weights"
-LABEL_NON_STANDARD_CHAR_MATCHES = "Non-standard character matches"
-NON_STANDARD_CHAR_PATTERN = r"[\u200B\u200C\u200D\u2060]"
-PDF_FILE_PATH = "/Entrust-PKIaaS-User-Guide.pdf"
+ERROR_NON_STANDARD_CHAR_MATCHES = "Non-standard character matches"
+ERROR_REPEATED_WEIGHTS = "Repeated weights"
+ERROR_TO_TO = 'To followed by **To'
 ERROR_UNUSED_IMG_FILE = "Unused image file"
 ERROR_UNUSED_SHARED_FILE = "Unused shared file"
-
+LABEL_DETECTED_ON_ANCHOR = "Detected on anchor"
+LABEL_DETECTED_ON_FILE = "Detected on file"
+LABEL_DETECTED_ON_LINE= "Detected on line"
+LABEL_DETECTED_ON_URL = "Detected on URL"
+LABEL_DETECTED_ON_LINE_NUMBER = 'Detected on line number'
+NON_STANDARD_CHAR_PATTERN = r"[\u200B\u200C\u200D\u2060]"
+PDF_FILE_PATH = "/Entrust-PKIaaS-User-Guide.pdf"
 
 def check_not_sized_imgs(
     error_log: collections.defaultdict[str, list[dict[str, Any]]],
@@ -58,7 +60,7 @@ def check_chars(
                     base_url=lib.hugo_uris.HUGO_LOCAL_URL,
                     base_dir=lib.hugo_uris.HUGO_CONTENT_DIR_PATH,
                 ),
-                LABEL_NON_STANDARD_CHAR_MATCHES: ",".join(
+                ERROR_NON_STANDARD_CHAR_MATCHES: ",".join(
                     [repr(each_char) for each_char in set(non_standard_char_matches)]
                 ),
             }
@@ -245,12 +247,24 @@ def check_repeated_weights(
         error_log["Repeated weights under"].append(
             {
                 LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
-                LABEL_REPEATED_WEIGHTS: ",".join(
+                ERROR_REPEATED_WEIGHTS: ",".join(
                     [str(each_weight) for each_weight in repeated_weights]
                 ),
             }
         )
 
+def check_to_before_to(md_file_path: pathlib.Path, pages_dict: dict[pathlib.Path, str], error_log: dict[str, list[dict[str, Any]]]):
+    each_file_lines = [each_line.strip() for each_line in pages_dict[md_file_path].splitlines() if each_line.strip()]
+    i=0
+    for i in range(1, len(each_file_lines)):
+        if '**To' in each_file_lines[i]:
+            error_log[ERROR_TO_TO].append(
+                {
+                    LABEL_DETECTED_ON_FILE: md_file_path.as_posix(),
+                    LABEL_DETECTED_ON_LINE: each_file_lines[i],
+                    LABEL_DETECTED_ON_LINE_NUMBER: i
+                }
+            )
 
 def check_unused_img_files(
     img_dir: pathlib.Path,
