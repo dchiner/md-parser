@@ -50,15 +50,14 @@ def get_page_title(file_contents: str) -> str:
 
 
 def get_page_weight(file_contents: str, no_weigh_found: int=NO_WEIGHT_FOUND.verbose) -> int:
-    if 'weight:' not in file_contents:
-        if no_weigh_found == NO_WEIGHT_FOUND.silent:
+    if 'weight:' in file_contents:
+        return int(file_contents.split('weight:').pop().split('\n')[0].strip())
+    if no_weigh_found == NO_WEIGHT_FOUND.silent:
             return -1
-        if no_weigh_found == NO_WEIGHT_FOUND.verbose:
+    if no_weigh_found == NO_WEIGHT_FOUND.verbose:
             print('Skipping file without "weight:"')
             return -1
-        if no_weigh_found == NO_WEIGHT_FOUND.exception:
-            assert 'weight:' in file_contents, '"weight:" not found in file contents'
-    return int(file_contents.split('weight:').pop().split('\n')[0].strip())
+    assert 'weight:' in file_contents, '"weight:" not found in file contents'
 
 
 def is_empty(file_content: str) -> bool:
